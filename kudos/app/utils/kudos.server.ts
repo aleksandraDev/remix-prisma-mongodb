@@ -10,7 +10,6 @@ export const createKudo = async (
 	await prisma.kudo.create({
 		data: {
 			message,
-			style,
 			author: {
 				connect: {
 					id: userId,
@@ -21,6 +20,7 @@ export const createKudo = async (
 					id: recipientId,
 				},
 			},
+			style,
 		},
 	});
 };

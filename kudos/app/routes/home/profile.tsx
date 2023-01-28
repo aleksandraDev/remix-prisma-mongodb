@@ -1,23 +1,19 @@
-import { useState, useRef, useEffect } from 'react';
-import type { LoaderFunction, ActionFunction } from '@remix-run/node';
-import { json, redirect } from '@remix-run/node';
-import { useLoaderData, useActionData } from '@remix-run/react';
-
-import { getUser, requireUserId, logout } from '~/utils/auth.server';
-import { validateName } from '~/utils/validators.server';
-import { departments } from '~/utils/constants';
-import { updateUser, deleteUser } from '~/utils/user.server';
-import type { Department } from '@prisma/client';
-
-import { SelectBox } from '~/components/select-box';
-import { FormField } from '~/components/form-field';
+import type { LoaderFunction } from '@remix-run/node';
 import { Modal } from '~/components/modal';
-import { ImageUploader } from '~/components/image-uploader';
 
-export const loader: LoaderFunction = async ({ request }) => {
-	const user = await getUser(request);
-	return json({ user });
-};
+import { useLoaderData, useActionData } from '@remix-run/react';
+import { useState, useRef, useEffect } from 'react';
+import { FormField } from '~/components/form-field';
+import { departments } from '~/utils/constants';
+import { SelectBox } from '~/components/select-box';
+
+import { validateName } from '~/utils/validators.server';
+import type { ActionFunction } from '@remix-run/node';
+import { redirect, json } from '@remix-run/node';
+import { getUser, requireUserId, logout } from '~/utils/auth.server';
+import type { Department } from '@prisma/client';
+import { ImageUploader } from '~/components/image-uploader';
+import { updateUser, deleteUser } from '~/utils/user.server';
 
 export const action: ActionFunction = async ({ request }) => {
 	const userId = await requireUserId(request);
@@ -52,7 +48,6 @@ export const action: ActionFunction = async ({ request }) => {
 				lastName,
 				department: department as Department,
 			});
-
 			return redirect('/home');
 		case 'delete':
 			await deleteUser(userId);
@@ -62,12 +57,16 @@ export const action: ActionFunction = async ({ request }) => {
 	}
 };
 
+export const loader: LoaderFunction = async ({ request }) => {
+	const user = await getUser(request);
+	return json({ user });
+};
+
 export default function ProfileSettings() {
 	const { user } = useLoaderData();
 	const actionData = useActionData();
 	const [formError, setFormError] = useState(actionData?.error || '');
 	const firstLoad = useRef(true);
-
 	const [formData, setFormData] = useState({
 		firstName: actionData?.fields?.firstName || user?.profile?.firstName,
 		lastName: actionData?.fields?.lastName || user?.profile?.lastName,
@@ -92,11 +91,13 @@ export default function ProfileSettings() {
 	const handleFileUpload = async (file: File) => {
 		let inputFormData = new FormData();
 		inputFormData.append('profile-pic', file);
+
 		const response = await fetch('/avatar', {
 			method: 'POST',
 			body: inputFormData,
 		});
 		const { imageUrl } = await response.json();
+
 		setFormData({
 			...formData,
 			profilePicture: imageUrl,
@@ -151,9 +152,9 @@ export default function ProfileSettings() {
 							</button>
 							<div className="w-full text-right mt-4">
 								<button
-									className="rounded-xl bg-yellow-300 font-semibold text-blue-600 px-16 py-2 transition duration-300 ease-in-out hover:bg-yellow-400 hover:-translate-y-1"
 									name="_action"
 									value="save"
+									className="rounded-xl bg-yellow-300 font-semibold text-blue-600 px-16 py-2 transition duration-300 ease-in-out hover:bg-yellow-400 hover:-translate-y-1"
 								>
 									Save
 								</button>

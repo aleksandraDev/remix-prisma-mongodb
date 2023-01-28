@@ -1,4 +1,3 @@
-// app/utils/s3.server.ts
 import type { UploadHandler } from '@remix-run/node';
 import { unstable_parseMultipartFormData } from '@remix-run/node';
 import S3 from 'aws-sdk/clients/s3';

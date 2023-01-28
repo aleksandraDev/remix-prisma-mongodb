@@ -1,5 +1,5 @@
-import { Portal } from './portal';
 import { useNavigate } from '@remix-run/react';
+import { Portal } from './portal';
 
 interface props {
 	children: React.ReactNode;
@@ -11,7 +11,6 @@ interface props {
 export const Modal: React.FC<props> = ({ children, isOpen, ariaLabel, className }) => {
 	const navigate = useNavigate();
 	if (!isOpen) return null;
-
 	return (
 		<Portal wrapperId="modal">
 			<div
@@ -25,7 +24,6 @@ export const Modal: React.FC<props> = ({ children, isOpen, ariaLabel, className 
 				<div
 					className={`${className} p-4 bg-gray-200 pointer-events-auto max-h-screen md:rounded-xl`}
 				>
-					{/* This is where the modal content is rendered  */}
 					{children}
 				</div>
 			</div>

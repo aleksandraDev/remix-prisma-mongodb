@@ -1,19 +1,18 @@
 import type { LoaderFunction } from '@remix-run/node';
 import { json } from '@remix-run/node';
-import { useLoaderData, Outlet } from '@remix-run/react';
-import type { Kudo as IKudo, Profile, Prisma } from '@prisma/client';
-
-import { requireUserId, getUser } from '~/utils/auth.server';
 import { getOtherUsers } from '~/utils/user.server';
-import { getFilteredKudos, getRecentKudos } from '~/utils/kudos.server';
-
+import { requireUserId, getUser } from '~/utils/auth.server';
 import { Layout } from '~/components/layout';
 import { UserPanel } from '~/components/user-panel';
+import { useLoaderData, Outlet } from '@remix-run/react';
+
 import { Kudo } from '~/components/kudo';
+import type { Kudo as IKudo, Profile, Prisma } from '@prisma/client';
 import { SearchBar } from '~/components/search-bar';
+import { getFilteredKudos, getRecentKudos } from '~/utils/kudos.server';
 import { RecentBar } from '~/components/recent-bar';
 
-interface KudoWithProfile extends IKudo {
+interface KudoWithAuthor extends IKudo {
 	author: {
 		profile: Profile;
 	};
@@ -22,22 +21,33 @@ interface KudoWithProfile extends IKudo {
 export const loader: LoaderFunction = async ({ request }) => {
 	const userId = await requireUserId(request);
 	const users = await getOtherUsers(userId);
-	const user = await getUser(request);
 
+	// Pull out our search & sort criteria
 	const url = new URL(request.url);
 	const sort = url.searchParams.get('sort');
 	const filter = url.searchParams.get('filter');
-
 	let sortOptions: Prisma.KudoOrderByWithRelationInput = {};
 	if (sort) {
 		if (sort === 'date') {
-			sortOptions = { createdAt: 'desc' };
+			sortOptions = {
+				createdAt: 'desc',
+			};
 		}
 		if (sort === 'sender') {
-			sortOptions = { author: { profile: { firstName: 'asc' } } };
+			sortOptions = {
+				author: {
+					profile: {
+						firstName: 'asc',
+					},
+				},
+			};
 		}
 		if (sort === 'emoji') {
-			sortOptions = { style: { emoji: 'asc' } };
+			sortOptions = {
+				style: {
+					emoji: 'asc',
+				},
+			};
 		}
 	}
 
@@ -45,7 +55,12 @@ export const loader: LoaderFunction = async ({ request }) => {
 	if (filter) {
 		textFilter = {
 			OR: [
-				{ message: { mode: 'insensitive', contains: filter } },
+				{
+					message: {
+						mode: 'insensitive',
+						contains: filter,
+					},
+				},
 				{
 					author: {
 						OR: [
@@ -57,11 +72,10 @@ export const loader: LoaderFunction = async ({ request }) => {
 			],
 		};
 	}
-
 	const kudos = await getFilteredKudos(userId, sortOptions, textFilter);
 	const recentKudos = await getRecentKudos();
-
-	return json({ users, recentKudos, kudos, user });
+	const user = await getUser(request);
+	return json({ user, users, kudos, recentKudos });
 };
 
 export default function Home() {
@@ -75,7 +89,7 @@ export default function Home() {
 					<SearchBar profile={user.profile} />
 					<div className="flex-1 flex">
 						<div className="w-full p-10 flex flex-col gap-y-4">
-							{kudos.map((kudo: KudoWithProfile) => (
+							{kudos.map((kudo: KudoWithAuthor) => (
 								<Kudo key={kudo.id} kudo={kudo} profile={kudo.author.profile} />
 							))}
 						</div>

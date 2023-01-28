@@ -16,17 +16,34 @@ model User {
   updatedAt DateTime @updatedAt
   email     String   @unique
   password  String
-  profile   Profile
+
   authoredKudos Kudo[]  @relation("AuthoredKudos")
   kudos         Kudo[]  @relation("RecievedKudos")
+  profile       Profile
+}
 
+model Kudo {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  message     String
+  createdAt   DateTime   @default(now())
+  style       KudoStyle?
+  author      User       @relation(references: [id], fields: [authorId], onDelete: Cascade, "AuthoredKudos")
+  authorId    String     @db.ObjectId
+  recipient   User       @relation(references: [id], fields: [recipientId], "RecievedKudos")
+  recipientId String     @db.ObjectId
 }
 
 type Profile {
-  firstName String
-  lastName  String
-  department Department? @default(MARKETING)
+  firstName      String
+  lastName       String
+  department     Department? @default(MARKETING)
   profilePicture String?
+}
+
+type KudoStyle {
+  backgroundColor Color @default(YELLOW)
+  textColor       Color @default(WHITE)
+  emoji           Emoji @default(THUMBSUP)
 }
 
 enum Emoji {
@@ -48,21 +65,4 @@ enum Color {
   YELLOW
   BLUE
   WHITE
-}
-
-type KudoStyle {
-  backgroundColor Color @default(YELLOW)
-  textColor       Color @default(WHITE)
-  emoji           Emoji @default(THUMBSUP)
-}
-
-model Kudo {
-  id          String     @id @default(auto()) @map("_id") @db.ObjectId
-  message     String
-  createdAt   DateTime   @default(now())
-  style       KudoStyle?
-  author      User       @relation(references: [id], fields: [authorId], onDelete: Cascade, "AuthoredKudos")
-  authorId    String     @db.ObjectId
-  recipient   User       @relation(references: [id], fields: [recipientId], "RecievedKudos")
-  recipientId String     @db.ObjectId
 }
